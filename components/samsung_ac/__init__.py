@@ -149,7 +149,6 @@ def custom_sensor_schema(
     device_class: str = sensor.UNDEF,
     state_class: str = sensor.UNDEF,
     entity_category: str = sensor.UNDEF,
-    raw_filters=[],
 ):
     return sensor.sensor_schema(
         unit_of_measurement=unit_of_measurement,
@@ -161,9 +160,7 @@ def custom_sensor_schema(
     ).extend(
         {
             cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,
-            cv.Optional(
-                CONF_FILTERS, default=raw_filters
-            ): sensor.validate_filters,
+            cv.Optional(CONF_FILTERS, default=[]): sensor.validate_filters,
         }
     )
 
@@ -531,14 +528,7 @@ async def to_code(config):
         for key in CUSTOM_SENSOR_KEYS:
             if key in device:
                 conf = device[key]
-                # combine raw filters with any user-defined filters
-                conf_copy = conf.copy()
-                conf_copy[CONF_FILTERS] = (
-                    conf[CONF_FILTERS] 
-                    if CONF_FILTERS in conf 
-                    else []
-                ) + (conf.get(CONF_FILTERS, []))
-                sens = await sensor.new_sensor(conf_copy)
+                sens = await sensor.new_sensor(conf)
                 cg.add(
                     var_dev.add_custom_sensor(conf[CONF_DEVICE_CUSTOM_MESSAGE], sens)
                 )
