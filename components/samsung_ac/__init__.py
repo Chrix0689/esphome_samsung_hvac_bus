@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart, sensor, switch, select, number, climate
-from esphome.components.sensor import CONF_FILTERS  # ← MISSING IMPORT
+from esphome.config_validation import UNDEFINED
 from esphome.const import (
     CONF_ID,
     DEVICE_CLASS_TEMPERATURE,
@@ -47,11 +47,11 @@ SELECT_WATER_HEATER_MODE_SCHEMA = select.select_schema(
     Samsung_AC_Water_Heater_Mode_Select
 )
 
-NUMBER_SCHEMA = number.number_schema(
+NUMBER_SCHEMA = number.NUMBER_SCHEMA.extend(
     {cv.GenerateID(): cv.declare_id(Samsung_AC_Number)}
 )
 
-CLIMATE_SCHEMA = climate.climate_schema(
+CLIMATE_SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {cv.GenerateID(): cv.declare_id(Samsung_AC_Climate)}
 )
 
@@ -135,7 +135,7 @@ CAPABILITIES_SCHEMA = cv.Schema(
     }
 )
 
-CUSTOM_SENSOR_SCHEMA = sensor.sensor_schema(
+CUSTOM_SENSOR_SCHEMA = sensor.sensor_schema().extend(
     {
         cv.Required(CONF_DEVICE_CUSTOM_MESSAGE): cv.hex_int,
     }
@@ -144,28 +144,24 @@ CUSTOM_SENSOR_SCHEMA = sensor.sensor_schema(
 
 def custom_sensor_schema(
     message: int,
-    unit_of_measurement: str = None,
-    icon: str = None,
-    accuracy_decimals: int = None,
-    device_class: str = None,
-    state_class: str = None,
-    entity_category: str = None,
+    unit_of_measurement: str = UNDEFINED,
+    icon: str = UNDEFINED,
+    accuracy_decimals: int = UNDEFINED,
+    device_class: str = UNDEFINED,
+    state_class: str = UNDEFINED,
+    entity_category: str = UNDEFINED,
     raw_filters=[],
-    default_message: int = None, # Adding the default_message parameter
 ):
-    schema =  sensor.sensor_schema(
+    return sensor.sensor_schema(
         unit_of_measurement=unit_of_measurement,
         icon=icon,
         accuracy_decimals=accuracy_decimals,
         device_class=device_class,
         state_class=state_class,
         entity_category=entity_category,
-    )
-    if default_message is not None: # checking if we are adding default message to the key
-       schema = schema.extend({cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,})
-    
-    return schema.extend(  # regardless, we are going to add RAW_FILTERS
+    ).extend(
         {
+            cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,
             cv.Optional(
                 CONF_DEVICE_CUSTOM_RAW_FILTERS, default=raw_filters
             ): sensor.validate_filters,
@@ -263,23 +259,34 @@ DEVICE_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_MEASUREMENT,
             icon="mdi:flash",
         ),
-        cv.Optional(CONF_DEVICE_OUT_CONTROL_WATTMETER_1W_1MIN_SUM): sensor.sensor_schema(
-           unit_of_measurement="kWh",
-           accuracy_decimals=3,
-           device_class=DEVICE_CLASS_ENERGY,
-           state_class=STATE_CLASS_TOTAL_INCREASING,
-           icon="mdi:counter",
-        ).extend({
-    cv.Optional(CONF_FILTERS, default=[{"multiply": 0.001}]): sensor.validate_filters  # ← FILTERS GO HERE
-}),
+        cv.Optional(
+            CONF_DEVICE_OUT_CONTROL_WATTMETER_1W_1MIN_SUM
+        ): sensor.sensor_schema(
+            unit_of_measurement="kWh",
+            accuracy_decimals=3,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            icon="mdi:counter",
+        ).extend(
+            {
+                cv.Optional(
+                    CONF_FILTERS, default=[{"multiply": 0.001}]
+                ): sensor.validate_filters
+            }
+        ),
         cv.Optional(CONF_DEVICE_OUT_SENSOR_CT1): sensor.sensor_schema(
             unit_of_measurement=UNIT_AMPERE,
             accuracy_decimals=2,
             device_class=DEVICE_CLASS_CURRENT,
             state_class=STATE_CLASS_MEASUREMENT,
             icon="mdi:current-ac",
-            ).extend({
-    cv.Optional(CONF_FILTERS, default=[{"multiply": 0.001}]): sensor.validate_filters}
+        ).extend(
+            {
+                cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x8217): cv.hex_int,
+                cv.Optional(
+                    CONF_FILTERS, default=[{"multiply": 0.1}]
+                ): sensor.validate_filters,
+            }
         ),
         cv.Optional(CONF_DEVICE_OUT_SENSOR_VOLTAGE): sensor.sensor_schema(
             unit_of_measurement=UNIT_VOLT,
@@ -287,9 +294,11 @@ DEVICE_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
             icon="mdi:flash",
-        ).extend({
-            cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x24FC): cv.hex_int
-        }),
+        ).extend(
+            {
+                cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x24FC): cv.hex_int,
+            }
+        ),
     }
 )
 
@@ -526,7 +535,7 @@ async def to_code(config):
                 # combine raw filters with any user-defined filters
                 conf_copy = conf.copy()
                 conf_copy[CONF_FILTERS] = (
-                    conf.get[CONF_DEVICE_CUSTOM_RAW_FILTERS]
+                    conf[CONF_DEVICE_CUSTOM_RAW_FILTERS]
                     if CONF_DEVICE_CUSTOM_RAW_FILTERS in conf
                     else []
                 ) + (conf[CONF_FILTERS] if CONF_FILTERS in conf else [])
