@@ -1,6 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart, sensor, switch, select, number, climate
+from esphome.components.sensor import CONF_FILTERS  # ← MISSING IMPORT
 from esphome.const import (
     CONF_ID,
     DEVICE_CLASS_TEMPERATURE,
@@ -262,17 +263,15 @@ DEVICE_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_MEASUREMENT,
             icon="mdi:flash",
         ),
-        cv.Optional(
-            CONF_DEVICE_OUT_CONTROL_WATTMETER_1W_1MIN_SUM
-        ): sensor.sensor_schema(
-            unit_of_measurement="kWh",
-            accuracy_decimals=3,
-            device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
-            icon="mdi:counter",
+        cv.Optional(CONF_DEVICE_OUT_CONTROL_WATTMETER_1W_1MIN_SUM): sensor.sensor_schema(
+           unit_of_measurement="kWh",
+           accuracy_decimals=3,
+           device_class=DEVICE_CLASS_ENERGY,
+           state_class=STATE_CLASS_TOTAL_INCREASING,
+           icon="mdi:counter",
         ).extend({
-    cv.Optional(CONF_FILTERS, default=[{"multiply": 0.001}]): sensor.validate_filters}
-        ),
+    cv.Optional(CONF_FILTERS, default=[{"multiply": 0.001}]): sensor.validate_filters  # ← FILTERS GO HERE
+}),
         cv.Optional(CONF_DEVICE_OUT_SENSOR_CT1): sensor.sensor_schema(
             unit_of_measurement=UNIT_AMPERE,
             accuracy_decimals=2,
@@ -283,15 +282,14 @@ DEVICE_SCHEMA = cv.Schema(
     cv.Optional(CONF_FILTERS, default=[{"multiply": 0.001}]): sensor.validate_filters}
         ),
         cv.Optional(CONF_DEVICE_OUT_SENSOR_VOLTAGE): sensor.sensor_schema(
-            message=0x24FC,  # Default custom message goes here
             unit_of_measurement=UNIT_VOLT,
             accuracy_decimals=1,
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
             icon="mdi:flash",
-            ).extend({
-    cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x24FC): cv.hex_int}
-        ),
+        ).extend({
+            cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x24FC): cv.hex_int
+        }),
     }
 )
 
@@ -528,7 +526,7 @@ async def to_code(config):
                 # combine raw filters with any user-defined filters
                 conf_copy = conf.copy()
                 conf_copy[CONF_FILTERS] = (
-                    conf[CONF_DEVICE_CUSTOM_RAW_FILTERS]
+                    conf.get[CONF_DEVICE_CUSTOM_RAW_FILTERS]
                     if CONF_DEVICE_CUSTOM_RAW_FILTERS in conf
                     else []
                 ) + (conf[CONF_FILTERS] if CONF_FILTERS in conf else [])
