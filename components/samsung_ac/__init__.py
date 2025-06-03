@@ -158,12 +158,14 @@ def custom_sensor_schema(
         device_class=device_class,
         state_class=state_class,
         entity_category=entity_category,
-    ).extend({
-        cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,
-        cv.Optional(
-            CONF_FILTERS, default=raw_filters
-        ): sensor.validate_filters,
-    })
+    ).extend(
+        {
+            cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,
+            cv.Optional(
+                CONF_FILTERS, default=raw_filters
+            ): sensor.validate_filters,
+        }
+    )
 
 
 def temperature_sensor_schema(message: int):
@@ -182,23 +184,25 @@ def temperature_sensor_schema(message: int):
 
 
 def humidity_sensor_schema(message: int):
-    return custom_sensor_schema(
-        message=message,
+    return sensor.sensor_schema(
         unit_of_measurement=UNIT_PERCENT,
         accuracy_decimals=0,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
-    )
+    ).extend({
+        cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,
+    })
 
 
 def error_code_sensor_schema(message: int):
-    return custom_sensor_schema(
-        message=message,
+    return sensor.sensor_schema(
         unit_of_measurement="",
         accuracy_decimals=0,
         icon="mdi:alert",
         entity_category="diagnostic",
-    )
+    ).extend({
+        cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,
+    })
 
 
 DEVICE_SCHEMA = cv.Schema(
@@ -285,18 +289,15 @@ DEVICE_SCHEMA = cv.Schema(
                 CONF_FILTERS, default=[{"multiply": 0.1}]
             ): sensor.validate_filters,
         }),
-        cv.Optional(CONF_DEVICE_OUT_SENSOR_VOLTAGE): cv.All(
-            sensor.sensor_schema(
-                unit_of_measurement=UNIT_VOLT,
-                accuracy_decimals=1,
-                device_class=DEVICE_CLASS_VOLTAGE,
-                state_class=STATE_CLASS_MEASUREMENT,
-                icon="mdi:flash",
-            ),
-            {
-                cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x24FC): cv.hex_int,
-            }
-        ),
+        cv.Optional(CONF_DEVICE_OUT_SENSOR_VOLTAGE): sensor.sensor_schema(
+            unit_of_measurement=UNIT_VOLT,
+            accuracy_decimals=1,
+            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=STATE_CLASS_MEASUREMENT,
+            icon="mdi:flash",
+        ).extend({
+            cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x24FC): cv.hex_int,
+        }),
     }
 )
 
@@ -533,10 +534,10 @@ async def to_code(config):
                 # combine raw filters with any user-defined filters
                 conf_copy = conf.copy()
                 conf_copy[CONF_FILTERS] = (
-                    conf[CONF_DEVICE_CUSTOM_RAW_FILTERS]
-                    if CONF_DEVICE_CUSTOM_RAW_FILTERS in conf
+                    conf[CONF_FILTERS] 
+                    if CONF_FILTERS in conf 
                     else []
-                ) + (conf[CONF_FILTERS] if CONF_FILTERS in conf else [])
+                ) + (conf.get(CONF_FILTERS, []))
                 sens = await sensor.new_sensor(conf_copy)
                 cg.add(
                     var_dev.add_custom_sensor(conf[CONF_DEVICE_CUSTOM_MESSAGE], sens)
