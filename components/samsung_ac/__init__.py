@@ -2,6 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart, sensor, switch, select, number, climate
 from esphome.config_validation import UNDEFINED
+from esphome.components.sensor import CONF_FILTERS, sensor_schema
 from esphome.const import (
     CONF_ID,
     DEVICE_CLASS_TEMPERATURE,
