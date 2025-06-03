@@ -5,7 +5,7 @@ from esphome.const import (
     CONF_ID,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASS_TOTAL,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_HUMIDITY,
@@ -264,7 +264,7 @@ DEVICE_SCHEMA = cv.Schema(
             unit_of_measurement="kWh",
             accuracy_decimals=3,
             device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
+            state_class=STATE_CLASS_TOTAL,
             icon="mdi:counter",
         ).extend({
             cv.Optional(
