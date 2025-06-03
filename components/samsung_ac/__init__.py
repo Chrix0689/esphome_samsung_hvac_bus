@@ -1,6 +1,5 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components.sensor import CONF_FILTERS
 from esphome.components import uart, sensor, switch, select, number, climate
 from esphome.const import (
     CONF_ID,
@@ -75,7 +74,7 @@ CONF_DEVICE_CLIMATE = "climate"
 CONF_DEVICE_ROOM_HUMIDITY = "room_humidity"
 CONF_DEVICE_CUSTOM = "custom_sensor"
 CONF_DEVICE_CUSTOM_MESSAGE = "message"
-# CONF_DEVICE_CUSTOM_RAW_FILTERS = "raw_filters"
+CONF_DEVICE_CUSTOM_RAW_FILTERS = "raw_filters"
 CONF_DEVICE_ERROR_CODE = "error_code"
 CONF_DEVICE_OUT_CONTROL_WATTMETER_ALL_UNIT_ACCUM = "outdoor_instantaneous_power"
 CONF_DEVICE_OUT_CONTROL_WATTMETER_1W_1MIN_SUM = "outdoor_cumulative_energy"
@@ -144,12 +143,12 @@ CUSTOM_SENSOR_SCHEMA = sensor.sensor_schema().extend(
 
 def custom_sensor_schema(
     message: int,
-    unit_of_measurement: str = UNDEFINED,
-    icon: str = UNDEFINED,
-    accuracy_decimals: int = UNDEFINED,
-    device_class: str = UNDEFINED,
-    state_class: str = UNDEFINED,
-    entity_category: str = UNDEFINED,
+    unit_of_measurement: str = sensor.UNDEF,
+    icon: str = sensor.UNDEF,
+    accuracy_decimals: int = sensor.UNDEF,
+    device_class: str = sensor.UNDEF,
+    state_class: str = sensor.UNDEF,
+    entity_category: str = sensor.UNDEF,
 ):
     return sensor.sensor_schema(
         unit_of_measurement=unit_of_measurement,
@@ -262,15 +261,19 @@ DEVICE_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_MEASUREMENT,
             icon="mdi:flash",
         ),
-     # cv.Optional(CONF_DEVICE_OUT_CONTROL_WATTMETER_1W_1MIN_SUM): sensor.sensor_schema(
-#     unit_of_measurement="kWh",
-#     accuracy_decimals=3,
-#     device_class=DEVICE_CLASS_ENERGY,
-#     state_class=STATE_CLASS_TOTAL_INCREASING,
-#     icon="mdi:counter",
-# ).extend({
-#     cv.Optional(CONF_FILTERS, default=[{"multiply": 0.001}]): sensor.validate_filters
-# }),
+        cv.Optional(
+            CONF_DEVICE_OUT_CONTROL_WATTMETER_1W_1MIN_SUM
+        ): sensor.sensor_schema(
+            unit_of_measurement="kWh",
+            accuracy_decimals=3,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_TOTAL,
+            icon="mdi:counter",
+        ).extend({
+            cv.Optional(
+                CONF_FILTERS, default=[{"multiply": 0.001}]
+            ): sensor.validate_filters
+        }),
         cv.Optional(CONF_DEVICE_OUT_SENSOR_CT1): sensor.sensor_schema(
             unit_of_measurement=UNIT_AMPERE,
             accuracy_decimals=2,
