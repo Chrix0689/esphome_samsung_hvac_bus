@@ -158,25 +158,27 @@ def custom_sensor_schema(
         device_class=device_class,
         state_class=state_class,
         entity_category=entity_category,
-    ).extend(
-        {
-            cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,
-            cv.Optional(
-                CONF_DEVICE_CUSTOM_RAW_FILTERS, default=raw_filters
-            ): sensor.validate_filters,
-        }
-    )
+    ).extend({
+        cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,
+        cv.Optional(
+            CONF_FILTERS, default=raw_filters
+        ): sensor.validate_filters,
+    })
 
 
 def temperature_sensor_schema(message: int):
-    return custom_sensor_schema(
-        message=message,
+    return sensor.sensor_schema(
         unit_of_measurement=UNIT_CELSIUS,
         accuracy_decimals=1,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
-        raw_filters=[{"lambda": Lambda("return (int16_t)x;")}, {"multiply": 0.1}],
-    )
+    ).extend({
+        cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=message): cv.hex_int,
+        cv.Optional(
+            CONF_FILTERS, 
+            default=[{"lambda": "return (int16_t)x;"}, {"multiply": 0.1}]
+        ): sensor.validate_filters,
+    })
 
 
 def humidity_sensor_schema(message: int):
