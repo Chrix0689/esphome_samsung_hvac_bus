@@ -270,7 +270,8 @@ DEVICE_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_TOTAL_INCREASING,
             icon="mdi:counter",
-            filters=[{"multiply": 0.001}],  # Filters are passed directly
+        ).extend({
+    cv.Optional(CONF_FILTERS, default=[{"multiply": 0.001}]): sensor.validate_filters}
         ),
         cv.Optional(CONF_DEVICE_OUT_SENSOR_CT1): sensor.sensor_schema(
             unit_of_measurement=UNIT_AMPERE,
@@ -278,7 +279,8 @@ DEVICE_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_CURRENT,
             state_class=STATE_CLASS_MEASUREMENT,
             icon="mdi:current-ac",
-            filters=[{"multiply": 0.1}],  # Filters are passed directly
+            ).extend({
+    cv.Optional(CONF_FILTERS, default=[{"multiply": 0.001}]): sensor.validate_filters}
         ),
         cv.Optional(CONF_DEVICE_OUT_SENSOR_VOLTAGE): sensor.sensor_schema(
             message=0x24FC,  # Default custom message goes here
@@ -287,6 +289,8 @@ DEVICE_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
             icon="mdi:flash",
+            ).extend({
+    cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x24FC): cv.hex_int}
         ),
     }
 )
