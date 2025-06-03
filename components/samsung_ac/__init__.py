@@ -275,7 +275,7 @@ DEVICE_SCHEMA = cv.Schema(
                 ): sensor.validate_filters
             }
         ),
-        cv.Optional(CONF_DEVICE_OUT_SENSOR_CT1): sensor.sensor_schema(
+          cv.Optional(CONF_DEVICE_OUT_SENSOR_CT1): sensor.sensor_schema(
             unit_of_measurement=UNIT_AMPERE,
             accuracy_decimals=2,
             device_class=DEVICE_CLASS_CURRENT,
@@ -284,20 +284,8 @@ DEVICE_SCHEMA = cv.Schema(
         ).extend(
             {
                 cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x8217): cv.hex_int,
-                cv.Optional(
-                    CONF_FILTERS, default=[{"multiply": 0.1}]
+                cv.Optional(CONF_FILTERS, default=[{"multiply": 0.1}]
                 ): sensor.validate_filters,
-            }
-        ),
-        cv.Optional(CONF_DEVICE_OUT_SENSOR_VOLTAGE): sensor.sensor_schema(
-            unit_of_measurement=UNIT_VOLT,
-            accuracy_decimals=1,
-            device_class=DEVICE_CLASS_VOLTAGE,
-            state_class=STATE_CLASS_MEASUREMENT,
-            icon="mdi:flash",
-        ).extend(
-            {
-                cv.Optional(CONF_DEVICE_CUSTOM_MESSAGE, default=0x24FC): cv.hex_int,
             }
         ),
     }
